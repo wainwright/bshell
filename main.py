@@ -8,11 +8,13 @@ from PyQt4 import QtGui, QtCore
 class Worker(QtCore.QObject):
 
 	textout = QtCore.pyqtSignal(str)
+	runcommand = QtCore.pyqtSignal(str)
 
 	def __init__(self, parent=None):
 		super(Worker, self).__init__(parent)
 
 	def executeCommand(self, command):
+		self.runcommand.emit(command)
 		p = Popen(['bash', '-c', command], stdout=PIPE)
 		output = p.communicate()[0]
 		decodedOutput = output.decode('utf-8')
@@ -45,7 +47,8 @@ class Main(QtGui.QWidget):
 		self.thread.start()
 
 		self.linedit.returnPressed.connect(self._processCommand)
-		self.newCommand.connect(self.printCommand)
+		self.linedit.returnPressed.connect(self.linedit.clear)
+		self.worker.runcommand.connect(self.printCommand)
 		self.newCommand.connect(self.worker.executeCommand)
 		self.worker.textout.connect(self.printOutput)
 
@@ -58,7 +61,6 @@ class Main(QtGui.QWidget):
 
 	def printCommand(self, command):
 		self.textOut.appendPlainText('> ' + command)
-		self.linedit.clear()
 
 	def printOutput(self, output):
 		self.textOut.appendPlainText(output)
