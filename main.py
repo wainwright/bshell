@@ -36,6 +36,7 @@ class CommandBufferWindow(QtGui.QPlainTextEdit):
 
 	def __init__(self, parent=None):
 		super(CommandBufferWindow, self).__init__(parent)
+		self.resizeLines(0)
 
 	def update(self, entries):
 		self.clear()
@@ -104,7 +105,6 @@ class Main(QtGui.QWidget):
 		vbox.addWidget(self.cmdBufferWindow)
 		vbox.addWidget(self.linedit)
 		self.setLayout(vbox)
-		self.cmdBufferWindow.resizeLines(1)
 
 		self.worker = Worker(self.cmdBuffer)
 		self.worker.start()
