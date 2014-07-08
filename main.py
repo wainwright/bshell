@@ -17,7 +17,6 @@ class Worker(QtCore.QThread):
 		self.queue = queue
 
 	def executeCommand(self, command):
-		time.sleep(6)
 		self.runcommand.emit(command)
 		p = Popen(['bash', '-c', command], stdout=PIPE)
 		output = p.communicate()[0]
