@@ -35,7 +35,7 @@ class Worker(QtCore.QThread):
 		while True:
 			read = f.readline()
 			if read == '': break
-			self.textout.emit(read)
+			self.textout.emit(QtCore.QString.fromUtf8(read))
 
 	def run(self):
 		while True:
