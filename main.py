@@ -61,7 +61,6 @@ class CommandBuffer(QtCore.QObject):
 		self.queue = Queue()
 
 	def put(self, item, block=True, timeout=None):
-		print 'queue.put: ', item
 		self.queue.put(item, block, timeout)
 		self.commandAdded.emit(self.queue.queue)
 
