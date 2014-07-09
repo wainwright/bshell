@@ -3,6 +3,7 @@
 import sys
 import time
 import select
+import argparse
 import threading
 from subprocess import *
 from collections import deque
@@ -14,12 +15,14 @@ class Worker(QtCore.QThread):
 	textout = QtCore.pyqtSignal(str)
 	runcommand = QtCore.pyqtSignal(str)
 
-	def __init__(self, queue, parent=None):
+	def __init__(self, queue, parent=None, delay=None):
 		super(Worker, self).__init__(parent)
 		self.queue = queue
+		self.delay = delay
 
 	def executeCommand(self, command):
 		self.runcommand.emit(command)
+		if self.delay: time.sleep(self.delay)
 		p = Popen(['bash', '-c', command], stdout=PIPE, stderr=PIPE)
 		procFinish = stdoutFinished = stderrFinish = False
 
@@ -90,8 +93,9 @@ class Main(QtGui.QWidget):
 
 	newCommand = QtCore.pyqtSignal(QtCore.QString)
 
-	def __init__(self):
+	def __init__(self, delay=None):
 		super(Main, self).__init__()
+		self.delay = delay
 		self.initUI()
 
 	def initUI(self):
@@ -119,7 +123,7 @@ class Main(QtGui.QWidget):
 		self.setLayout(vbox)
 
 		# start thread and connect everything up
-		self.worker = Worker(self.cmdBuffer)
+		self.worker = Worker(self.cmdBuffer, delay=self.delay)
 		self.worker.start()
 
 		self.linedit.returnPressed.connect(self._processCommand)
@@ -145,11 +149,13 @@ class Main(QtGui.QWidget):
 		self.textOut.textCursor().insertText(output)
 
 def main():
-
+	parser = argparse.ArgumentParser(description='Buffered shell')
+	parser.add_argument('--delay', type=int,
+		help='artificial processing delay for testing the buffer')
+	args = parser.parse_args()
 	app = QtGui.QApplication(sys.argv)
-	ex = Main()
+	ex = Main(delay=args.delay)
 	sys.exit(app.exec_())
-
 
 if __name__ == '__main__':
 	main()
