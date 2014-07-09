@@ -58,6 +58,7 @@ class CommandBufferWindow(QtGui.QPlainTextEdit):
 	def __init__(self, parent=None):
 		super(CommandBufferWindow, self).__init__(parent)
 		self.resizeLines(0)
+		self.setVerticalScrollBarPolicy(1) # always off
 
 	def update(self, entries):
 		contents = '\n'.join([str(s) for s in entries]).strip()
