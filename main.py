@@ -3,6 +3,7 @@
 import sys
 import time
 import select
+import threading
 from subprocess import *
 from collections import deque
 from Queue import Queue
@@ -20,20 +21,21 @@ class Worker(QtCore.QThread):
 	def executeCommand(self, command):
 		self.runcommand.emit(command)
 		p = Popen(['bash', '-c', command], stdout=PIPE, stderr=PIPE)
+		procFinish = stdoutFinished = stderrFinish = False
+
+		tout = threading.Thread(target=self.readOutput, args=(p.stdout,))
+		terr = threading.Thread(target=self.readOutput, args=(p.stderr,))
+		tout.start()
+		terr.start()
+		p.wait()
+		tout.join()
+		terr.join()
+
+	def readOutput(self, f):
 		while True:
-			reads = [p.stdout.fileno(), p.stderr.fileno()]
-			ret = select.select(reads, [], [])
-
-			for fd in ret[0]:
-				if fd == p.stdout.fileno():
-					read = p.stdout.readline()
-					self.textout.emit(read)
-				if fd == p.stderr.fileno():
-					read = p.stderr.readline()
-					self.textout.emit(read)
-
-			if p.poll() != None:
-				break
+			read = f.readline()
+			if read == '': break
+			self.textout.emit(read)
 
 	def run(self):
 		while True:
@@ -116,6 +118,7 @@ class Main(QtGui.QWidget):
 		vbox.addWidget(self.linedit)
 		self.setLayout(vbox)
 
+		# start thread and connect everything up
 		self.worker = Worker(self.cmdBuffer)
 		self.worker.start()
 
