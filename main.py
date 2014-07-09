@@ -10,6 +10,11 @@ from collections import deque
 from Queue import Queue
 from PyQt4 import QtGui, QtCore
 
+terminalPalette = QtGui.QPalette(
+	QtGui.QColor('white'),
+	QtGui.QColor('black')
+	)
+
 class Worker(QtCore.QThread):
 
 	textout = QtCore.pyqtSignal(str)
@@ -96,24 +101,29 @@ class Main(QtGui.QWidget):
 	def __init__(self, delay=None):
 		super(Main, self).__init__()
 		self.delay = delay
+		self.setPalette(terminalPalette)
 		self.initUI()
 
 	def initUI(self):
+
 		# the output window
 		self.textOut = QtGui.QPlainTextEdit(self)
 		self.textOut.setReadOnly(True)
 		self.textOut.setFont(QtGui.QFont("UbuntuMono"))
+		self.textOut.setPalette(terminalPalette)
 
 		# the command buffer
 		self.cmdBuffer = CommandBuffer(self)
 		self.cmdBufferWindow = CommandBufferWindow(self)
 		self.cmdBufferWindow.setReadOnly(True)
 		self.cmdBufferWindow.setFont(QtGui.QFont("UbuntuMono"))
+		self.cmdBufferWindow.setPalette(terminalPalette)
 
 		# the command editor
 		self.linedit = QtGui.QLineEdit(self)
 		self.linedit.setFont(QtGui.QFont("UbuntuMono"))
 		self.linedit.setFocus()
+		self.linedit.setPalette(terminalPalette)
 
 		# layout
 		vbox = QtGui.QVBoxLayout()
