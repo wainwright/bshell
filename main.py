@@ -2,6 +2,7 @@
 
 import sys
 import time
+import select
 from subprocess import *
 from collections import deque
 from Queue import Queue
@@ -18,10 +19,21 @@ class Worker(QtCore.QThread):
 
 	def executeCommand(self, command):
 		self.runcommand.emit(command)
-		p = Popen(['bash', '-c', command], stdout=PIPE)
-		output = p.communicate()[0]
-		decodedOutput = output.decode('utf-8')
-		self.textout.emit(decodedOutput)
+		p = Popen(['bash', '-c', command], stdout=PIPE, stderr=PIPE)
+		while True:
+			reads = [p.stdout.fileno(), p.stderr.fileno()]
+			ret = select.select(reads, [], [])
+
+			for fd in ret[0]:
+				if fd == p.stdout.fileno():
+					read = p.stdout.readline()
+					self.textout.emit(read)
+				if fd == p.stderr.fileno():
+					read = p.stderr.readline()
+					self.textout.emit(read)
+
+			if p.poll() != None:
+				break
 
 	def run(self):
 		while True:
@@ -38,8 +50,8 @@ class CommandBufferWindow(QtGui.QPlainTextEdit):
 		self.resizeLines(0)
 
 	def update(self, entries):
-		self.clear()
-		self.insertPlainText('\n'.join([str(s) for s in entries]))
+		contents = '\n'.join([str(s) for s in entries]).strip()
+		self.setPlainText(contents)
 		self.resizeLines(len(entries))
 
 	def resizeLines(self, lines):
@@ -123,10 +135,11 @@ class Main(QtGui.QWidget):
 		self.newCommand.emit(self.linedit.text())
 
 	def printCommand(self, command):
-		self.textOut.appendPlainText('> ' + command)
+		self.printOutput('> ' + command + '\n')
 
 	def printOutput(self, output):
-		self.textOut.appendPlainText(output)
+		self.textOut.moveCursor(QtGui.QTextCursor.End)
+		self.textOut.textCursor().insertText(output)
 
 def main():
 
